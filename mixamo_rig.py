@@ -30,7 +30,7 @@ class MR_Properties(bpy.types.PropertyGroup):
 ##################
 
 class MR_OT_rename_to_mixamo(bpy.types.Operator):
-    """Update old control rig to Blender 3.0"""
+    """Update control rig naming to Blender 4.0"""
 
     bl_idname = "mr.rename_to_mixamo"
     bl_label = "rename_to_mixamo"
@@ -669,12 +669,6 @@ def clean_scene():
             hide_object(c)
         hide_object(cs_grp)
 
-    # Display layer 0 and 1 only
-    layers = bpy.context.active_object.data.layers
-    layers[0] = True
-    for i in range(0, 32):
-        layers[i] = i in [0]
-
 
 def init_armature_transforms(rig):
     bpy.ops.object.mode_set(mode='OBJECT')
@@ -831,10 +825,10 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
     rig_name = bpy.context.active_object.name
     rig = get_object(rig_name)
 
-    layer_mix_idx = 1
-    layer_mix_orig_idx = 2
-    layer_ctrl_idx = 0
-    layer_intern_idx = 8
+    layer_mix_idx = "DEF"
+    layer_mix_orig_idx = "ORIG"
+    layer_ctrl_idx = "CTRL"
+    layer_intern_idx = "DRIV"
     use_name_prefix = True
 
     c_master_name = c_prefix+master_rig_names["master"]
@@ -899,7 +893,7 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         print('Saving bone configuration...')
         
         for b in armature.edit_bones:
-            set_bone_layer(b, layer_mix_orig_idx)
+            set_bone_collection(rig, b, layer_mix_orig_idx)
             
         
         for b in armature.edit_bones[:]:
@@ -910,7 +904,7 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
                 cb.tail = b.tail
                 cb.matrix = b.matrix
                 orig_bone_map[b] = cb
-                set_bone_layer(cb, layer_mix_idx)
+                set_bone_collection(rig, cb, layer_mix_idx)
                     
         if len(orig_bone_map) > 0:
             for b in armature.edit_bones:
@@ -950,14 +944,14 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         c_root.head = [0, 0, 0]
         c_root.tail = [0, 0, 0.05 * rig.dimensions[2]]
         c_root.roll = 0.0
-        set_bone_layer(c_root, layer_mix_idx)
+        set_bone_collection(rig, c_root, layer_mix_idx)
 
         # Create bones
         c_master = create_edit_bone(c_master_name)
         c_master.head = [0, 0, 0]
         c_master.tail = [0, 0, 0.05 * rig.dimensions[2]]
         c_master.roll = 0.01
-        set_bone_layer(c_master, layer_ctrl_idx)
+        set_bone_collection(rig, c_master, layer_ctrl_idx)
         c_master["mixamo_ctrl"] = 1  # tag as controller bone
 
         # -- Pose --
@@ -1003,14 +997,14 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         hips.parent = get_edit_bone(c_root_name)
 
         for b in [hips, spine, spine1, spine2]:
-            set_bone_layer(b, layer_mix_idx)
+            set_bone_collection(rig, b, layer_mix_idx)
 
         # Hips Ctrl
         c_hips_name = c_prefix+spine_rig_names["pelvis"]
         c_hips = create_edit_bone(c_hips_name)
         copy_bone_transforms(hips, c_hips)
         c_hips.parent = get_edit_bone(c_prefix+master_rig_names["master"])
-        set_bone_layer(c_hips, layer_ctrl_idx)
+        set_bone_collection(rig, c_hips, layer_ctrl_idx)
         c_hips["mixamo_ctrl"] = 1  # tag as controller bone
 
         # Free Hips Ctrl
@@ -1022,21 +1016,21 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         c_hips_free["mixamo_ctrl"] = 1  # tag as controller bone
 
         c_hips_free.parent = c_hips
-        set_bone_layer(c_hips_free, layer_ctrl_idx)
+        set_bone_collection(rig, c_hips_free, layer_ctrl_idx)
 
         # Free Hips helper
         hips_free_h_name = spine_rig_names["hips_free_helper"]
         hips_free_helper = create_edit_bone(hips_free_h_name)
         copy_bone_transforms(hips, hips_free_helper)
         hips_free_helper.parent = c_hips_free
-        set_bone_layer(hips_free_helper, layer_intern_idx)
+        set_bone_collection(rig, hips_free_helper, layer_intern_idx)
 
         # Spine Ctrl
         c_spine_name = c_prefix+spine_rig_names["spine1"]
         c_spine = create_edit_bone(c_spine_name)
         copy_bone_transforms(spine, c_spine)
         c_spine.parent = c_hips
-        set_bone_layer(c_spine, layer_ctrl_idx)
+        set_bone_collection(rig, c_spine, layer_ctrl_idx)
         c_spine["mixamo_ctrl"] = 1  # tag as controller bone
 
         # Spine1 Ctrl
@@ -1044,7 +1038,7 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         c_spine1 = create_edit_bone(c_spine1_name)
         copy_bone_transforms(spine1, c_spine1)
         c_spine1.parent = c_spine
-        set_bone_layer(c_spine1, layer_ctrl_idx)
+        set_bone_collection(rig, c_spine1, layer_ctrl_idx)
         c_spine1["mixamo_ctrl"] = 1  # tag as controller bone
 
         # Spine2 Ctrl
@@ -1052,7 +1046,7 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         c_spine2 = create_edit_bone(c_spine2_name)
         copy_bone_transforms(spine2, c_spine2)
         c_spine2.parent = c_spine1
-        set_bone_layer(c_spine2, layer_ctrl_idx)
+        set_bone_collection(rig, c_spine2, layer_ctrl_idx)
         c_spine2["mixamo_ctrl"] = 1  # tag as controller bone
 
         # -- Pose --
@@ -1127,7 +1121,7 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         c_neck = create_edit_bone(c_neck_name)
         copy_bone_transforms(neck, c_neck)
         c_neck.parent = get_edit_bone(c_prefix+spine_rig_names["spine3"])
-        set_bone_layer(c_neck, layer_ctrl_idx)
+        set_bone_collection(rig, c_neck, layer_ctrl_idx)
         c_neck["mixamo_ctrl"] = 1  # tag as controller bone
 
         # Head Ctrl
@@ -1135,7 +1129,7 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         c_head = create_edit_bone(c_head_name)
         copy_bone_transforms(head, c_head)
         c_head.parent = c_neck
-        set_bone_layer(c_head, layer_ctrl_idx)
+        set_bone_collection(rig, c_head, layer_ctrl_idx)
         c_head["mixamo_ctrl"] = 1  # tag as controller bone
 
         # -- Pose --
@@ -1242,14 +1236,14 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         thigh_ik.tail = rotated_point
 
         thigh_ik.parent = c_hips_free
-        set_bone_layer(thigh_ik, layer_intern_idx)
+        set_bone_collection(rig, thigh_ik, layer_intern_idx)
 
         # Thigh FK Ctrl
         c_thigh_fk_name = c_prefix+leg_rig_names["thigh_fk"]+_side
         c_thigh_fk = create_edit_bone(c_thigh_fk_name)
         copy_bone_transforms(thigh_ik, c_thigh_fk)
         c_thigh_fk.parent = c_hips_free
-        set_bone_layer(c_thigh_fk, layer_ctrl_idx)
+        set_bone_collection(rig, c_thigh_fk, layer_ctrl_idx)
         c_thigh_fk["mixamo_ctrl"] = 1  # tag as controller bone
 
         # Calf IK
@@ -1265,7 +1259,7 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         calf_ik.tail = foot.head.copy()
         calf_ik.parent = thigh_ik
         calf_ik.use_connect = True
-        set_bone_layer(calf_ik, layer_intern_idx)
+        set_bone_collection(rig, calf_ik, layer_intern_idx)
 
         # align thigh and calf IK roll
         # align calf_ik local Z
@@ -1280,7 +1274,7 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         c_calf_fk = create_edit_bone(c_calf_fk_name)
         copy_bone_transforms(calf_ik, c_calf_fk)
         c_calf_fk.parent = c_thigh_fk
-        set_bone_layer(c_calf_fk, layer_ctrl_idx)
+        set_bone_collection(rig, c_calf_fk, layer_ctrl_idx)
         c_calf_fk["mixamo_ctrl"] = 1  # tag as controller bone
 
         # Foot FK Ctrl
@@ -1290,7 +1284,7 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         c_foot_fk.tail[2] = foot.head[2]
         align_bone_z_axis(c_foot_fk, Vector((0, 0, 1)))
         c_foot_fk.parent = c_calf_fk
-        set_bone_layer(c_foot_fk, layer_ctrl_idx)
+        set_bone_collection(rig, c_foot_fk, layer_ctrl_idx)
         c_foot_fk["mixamo_ctrl"] = 1  # tag as controller bone
 
         # Foot FK
@@ -1298,7 +1292,7 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         foot_fk = create_edit_bone(foot_fk_name)
         copy_bone_transforms(foot, foot_fk)
         foot_fk.parent = c_foot_fk
-        set_bone_layer(foot_fk, layer_intern_idx)
+        set_bone_collection(rig, foot_fk, layer_intern_idx)
 
         # Foot IK Ctrl
         c_foot_ik_name = c_prefix+leg_rig_names["foot_ik"]+_side
@@ -1306,7 +1300,7 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         copy_bone_transforms(foot, c_foot_ik)
         c_foot_ik.tail[2] = foot.head[2]
         align_bone_z_axis(c_foot_ik, Vector((0, 0, 1)))
-        set_bone_layer(c_foot_ik, layer_ctrl_idx)
+        set_bone_collection(rig, c_foot_ik, layer_ctrl_idx)
         c_foot_ik["mixamo_ctrl"] = 1  # tag as controller bone
 
         # Foot IK
@@ -1314,14 +1308,14 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         foot_ik = create_edit_bone(foot_ik_name)
         copy_bone_transforms(foot, foot_ik)
         foot_ik.parent = c_foot_ik
-        set_bone_layer(foot_ik, layer_intern_idx)
+        set_bone_collection(rig, foot_ik, layer_intern_idx)
 
         # Foot Snap
         foot_snap_name = leg_rig_names["foot_snap"]+_side
         foot_snap = create_edit_bone(foot_snap_name)
         copy_bone_transforms(c_foot_ik, foot_snap)
         foot_snap.parent = foot_ik
-        set_bone_layer(foot_snap, layer_intern_idx)
+        set_bone_collection(rig, foot_snap, layer_intern_idx)
 
         # Foot IK target
         foot_ik_target_name = leg_rig_names["foot_ik_target"]+_side
@@ -1331,28 +1325,28 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         foot_ik_target.tail = foot_ik_target.head - (foot_vec*0.25)
         align_bone_z_axis(foot_ik_target, Vector((0, 0, 1)))
         # parent set below (c_foot_01)
-        set_bone_layer(foot_ik_target, layer_intern_idx)
+        set_bone_collection(rig, foot_ik_target, layer_intern_idx)
 
         # Foot Heel Out
         heel_out_name = leg_rig_names["heel_out"]+_side
         heel_out = create_edit_bone(heel_out_name)
         heel_out.head, heel_out.tail = Vector((0, 0, 0)), Vector((0, 0, 1))
         heel_out.parent = c_foot_ik
-        set_bone_layer(heel_out, layer_intern_idx)
+        set_bone_collection(rig, heel_out, layer_intern_idx)
 
         # Foot Heel In
         heel_in_name = leg_rig_names["heel_in"]+_side
         heel_in = create_edit_bone(heel_in_name)
         heel_in.head, heel_in.tail = Vector((0, 0, 0)), Vector((0, 0, 1))
         heel_in.parent = heel_out
-        set_bone_layer(heel_in, layer_intern_idx)
+        set_bone_collection(rig, heel_in, layer_intern_idx)
 
         # Foot Heel Mid
         heel_mid_name = leg_rig_names["heel_mid"]+_side
         heel_mid = create_edit_bone(heel_mid_name)
         heel_mid.head, heel_mid.tail = Vector((0, 0, 0)), Vector((0, 0, 1))
         heel_mid.parent = heel_in
-        set_bone_layer(heel_mid, layer_intern_idx)
+        set_bone_collection(rig, heel_mid, layer_intern_idx)
 
         heel_mid.head[0], heel_mid.head[1], heel_mid.head[2] = foot.head[0], foot.head[1], foot.tail[2]
         heel_mid.tail = foot.tail.copy()
@@ -1381,7 +1375,7 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         toe_end.tail += toe_vec
         toe_end.head += toe_vec
         toe_end.parent = heel_mid
-        set_bone_layer(toe_end, layer_intern_idx)
+        set_bone_collection(rig, toe_end, layer_intern_idx)
 
         # Toe End 01
         toe_end_01_name = leg_rig_names["toe_end_01"]+_side
@@ -1390,7 +1384,7 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         vec = toe_end_01.tail - toe_end_01.head
         toe_end_01.tail = toe_end_01.head + (vec*0.5)
         toe_end_01.parent = toe_end
-        set_bone_layer(toe_end_01, layer_intern_idx)
+        set_bone_collection(rig, toe_end_01, layer_intern_idx)
 
         # Foot 01 Ctrl
         c_foot_01_name = c_prefix+leg_rig_names["foot_01"]+_side
@@ -1400,7 +1394,7 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         c_foot_01.tail += c_foot_01_vec
         c_foot_01.head += c_foot_01_vec
         c_foot_01.parent = toe_end
-        set_bone_layer(c_foot_01, layer_ctrl_idx)
+        set_bone_collection(rig, c_foot_01, layer_ctrl_idx)
         c_foot_01["mixamo_ctrl"] = 1  # tag as controller bone
 
         # Foot_ik_target parent
@@ -1415,14 +1409,14 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
             (c_foot_01.z_axis * 0.05 * c_foot_01.length * 40)
         foot_01_pole.roll = radians(180)
         foot_01_pole.parent = c_foot_01
-        set_bone_layer(foot_01_pole, layer_intern_idx)
+        set_bone_collection(rig, foot_01_pole, layer_intern_idx)
 
         # Toe IK Ctrl
         c_toe_ik_name = c_prefix+leg_rig_names["toe_ik"]+_side
         c_toe_ik = create_edit_bone(c_toe_ik_name)
         copy_bone_transforms(toe, c_toe_ik)
         c_toe_ik.parent = toe_end
-        set_bone_layer(c_toe_ik, layer_ctrl_idx)
+        set_bone_collection(rig, c_toe_ik, layer_ctrl_idx)
         c_toe_ik["mixamo_ctrl"] = 1  # tag as controller bone
 
         # Toe Track
@@ -1430,7 +1424,7 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         toe_track = create_edit_bone(toe_track_name)
         copy_bone_transforms(toe, toe_track)
         toe_track.parent = foot_ik
-        set_bone_layer(toe_track, layer_intern_idx)
+        set_bone_collection(rig, toe_track, layer_intern_idx)
 
         # Toe_01 IK
         toe_01_ik_name = leg_rig_names["toe_01_ik"]+_side
@@ -1438,7 +1432,7 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         copy_bone_transforms(toe, toe_01_ik)
         toe_01_ik.tail = toe_01_ik.head + (toe_01_ik.tail-toe_01_ik.head)*0.5
         toe_01_ik.parent = toe_track
-        set_bone_layer(toe_01_ik, layer_intern_idx)
+        set_bone_collection(rig, toe_01_ik, layer_intern_idx)
 
         # Toe_02
         toe_02_name = leg_rig_names["toe_02"]+_side
@@ -1446,14 +1440,14 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         copy_bone_transforms(toe, toe_02)
         toe_02.head = toe_02.head + (toe_02.tail-toe_02.head)*0.5
         toe_02.parent = toe_01_ik
-        set_bone_layer(toe_02, layer_intern_idx)
+        set_bone_collection(rig, toe_02, layer_intern_idx)
 
         # Toe FK Ctrl
         c_toe_fk_name = c_prefix+leg_rig_names["toe_fk"]+_side
         c_toe_fk = create_edit_bone(c_toe_fk_name)
         copy_bone_transforms(toe, c_toe_fk)
         c_toe_fk.parent = foot_fk
-        set_bone_layer(c_toe_fk, layer_ctrl_idx)
+        set_bone_collection(rig, c_toe_fk, layer_ctrl_idx)
         c_toe_fk["mixamo_ctrl"] = 1  # tag as controller bone
 
         # Foot Roll Cursor Ctrl
@@ -1466,13 +1460,13 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         c_foot_roll_cursor.head -= vec*dist
         c_foot_roll_cursor.tail -= vec*dist
         c_foot_roll_cursor.parent = c_foot_ik
-        set_bone_layer(c_foot_roll_cursor, layer_ctrl_idx)
+        set_bone_collection(rig, c_foot_roll_cursor, layer_ctrl_idx)
         c_foot_roll_cursor["mixamo_ctrl"] = 1  # tag as controller bone
 
         # Pole IK Ctrl
         c_pole_ik_name = c_prefix+leg_rig_names["pole_ik"]+_side
         c_pole_ik = create_edit_bone(c_pole_ik_name)
-        set_bone_layer(c_pole_ik, layer_ctrl_idx)
+        set_bone_collection(rig, c_pole_ik, layer_ctrl_idx)
         c_pole_ik["mixamo_ctrl"] = 1  # tag as controller bone
 
         plane_normal = (thigh_ik.head - calf_ik.tail)
@@ -1981,14 +1975,14 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
             lowerarm_twist.parent = forearm
             lowerarm_twist.use_connect = False
             lowerarm_twist.use_deform = True
-            set_bone_layer(lowerarm_twist, layer_mix_idx)
+            set_bone_collection(rig, lowerarm_twist, layer_mix_idx)
             upperarm_twist = create_edit_bone('upperarm_twist' + suffix)
             upperarm_twist.head = (arm.head + ((arm.tail - arm.head) * 0.5))
             upperarm_twist.tail = arm.tail.copy()
             upperarm_twist.parent = arm
             upperarm_twist.use_connect = False
             upperarm_twist.use_deform = True
-            set_bone_layer(upperarm_twist, layer_mix_idx)
+            set_bone_collection(rig, upperarm_twist, layer_mix_idx)
             
         if not shoulder or not arm or not forearm or not hand:
             print("    Arm bones are missing, skip arm: "+side)
@@ -2015,7 +2009,7 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
                 c_fingers_names.append(c_finger_name)
                 c_finger = create_edit_bone(c_finger_name)
                 copy_bone_transforms(finger, c_finger)
-                set_bone_layer(c_finger, 0)
+                set_bone_collection(rig, c_finger, layer_ctrl_idx)
                 c_finger["mixamo_ctrl"] = 1  # tag as controller bone
 
                 if i == 1:
@@ -2034,7 +2028,7 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         c_shoulder = create_edit_bone(c_shoulder_name)
         copy_bone_transforms(shoulder, c_shoulder)
         c_shoulder.parent = get_edit_bone(c_prefix+spine_rig_names["spine3"])
-        set_bone_layer(c_shoulder, layer_ctrl_idx)
+        set_bone_collection(rig, c_shoulder, layer_ctrl_idx)
         c_shoulder["mixamo_ctrl"] = 1  # tag as controller bone
 
         # Arm IK
@@ -2108,14 +2102,14 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         arm_ik.tail = rotated_point
 
         arm_ik.parent = c_shoulder
-        set_bone_layer(arm_ik, layer_intern_idx)
+        set_bone_collection(rig, arm_ik, layer_intern_idx)
 
         # Arm FK Ctrl
         c_arm_fk_name = c_prefix+arm_rig_names["arm_fk"]+_side
         c_arm_fk = create_edit_bone(c_arm_fk_name)
         c_arm_fk.parent = get_edit_bone(c_prefix+spine_rig_names["spine3"])
         copy_bone_transforms(arm_ik, c_arm_fk)
-        set_bone_layer(c_arm_fk, layer_ctrl_idx)
+        set_bone_collection(rig, c_arm_fk, layer_ctrl_idx)
         c_arm_fk["mixamo_ctrl"] = 1  # tag as controller bone
 
         # ForeArm IK
@@ -2125,7 +2119,7 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         forearm_ik.head = arm_ik.tail.copy()
         forearm_ik.tail = hand.head.copy()
         forearm_ik.parent = arm_ik
-        set_bone_layer(forearm_ik, layer_intern_idx)
+        set_bone_collection(rig, forearm_ik, layer_intern_idx)
 
         # align arm and forearm IK roll
         # align forearm_ik local Z
@@ -2145,13 +2139,13 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         c_forearm_fk = create_edit_bone(c_forearm_fk_name)
         copy_bone_transforms(forearm_ik, c_forearm_fk)
         c_forearm_fk.parent = c_arm_fk
-        set_bone_layer(c_forearm_fk, layer_ctrl_idx)
+        set_bone_collection(rig, c_forearm_fk, layer_ctrl_idx)
         c_forearm_fk["mixamo_ctrl"] = 1  # tag as controller bone
 
         # Pole IK Ctrl
         c_pole_ik_name = c_prefix+arm_rig_names["pole_ik"]+_side
         c_pole_ik = create_edit_bone(c_pole_ik_name)
-        set_bone_layer(c_pole_ik, layer_ctrl_idx)
+        set_bone_collection(rig, c_pole_ik, layer_ctrl_idx)
         c_pole_ik["mixamo_ctrl"] = 1  # tag as controller bone
 
         arm_midpoint = (arm_ik.head + forearm_ik.tail) * 0.5
@@ -2174,7 +2168,7 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         # Hand IK Ctrl
         c_hand_ik_name = c_prefix + arm_rig_names["hand_ik"]+_side
         c_hand_ik = create_edit_bone(c_hand_ik_name)
-        set_bone_layer(c_hand_ik, layer_ctrl_idx)
+        set_bone_collection(rig, c_hand_ik, layer_ctrl_idx)
         copy_bone_transforms(hand, c_hand_ik)
         c_hand_ik["mixamo_ctrl"] = 1  # tag as controller bone
 
@@ -2183,7 +2177,7 @@ def _make_rig(ik_legs, ik_arms, with_arm_twist):
         c_hand_fk = create_edit_bone(c_hand_fk_name)
         copy_bone_transforms(hand, c_hand_fk)
         c_hand_fk.parent = c_forearm_fk
-        set_bone_layer(c_hand_fk, layer_ctrl_idx)
+        set_bone_collection(rig, c_hand_fk, layer_ctrl_idx)
         c_hand_fk["mixamo_ctrl"] = 1  # tag as controller bone
 
         # ---- Pose ----
@@ -2548,10 +2542,12 @@ def redefine_source_rest_pose(src_arm, tar_arm):
 
     src_arm_loc = src_arm.location.copy()
     src_arm.location = [0, 0, 0]
-    anim_name = src_arm.animation_data.action.name 
-    fr_range = src_arm.animation_data.action.frame_range
-    fr_start = int(fr_range[0])
-    fr_end = int(fr_range[1])
+    # Get anim data
+    action = src_arm.animation_data.action
+    fr_start = int(action.frame_range[0])
+    fr_end = int(action.frame_range[1])
+
+    anim_name = action.name
 
     # duplicate source armature
     bpy.ops.object.mode_set(mode='OBJECT')
@@ -2626,7 +2622,7 @@ def redefine_source_rest_pose(src_arm, tar_arm):
         cns.subtarget = pb.name
 
     # Restore animation
-    print("Restore animation...")
+    print("Restore animation...{}:{}".format(fr_start, fr_end))
     bake_anim(anim_name, frame_start=fr_start, frame_end=fr_end,
               only_selected=False, bake_bones=True, bake_object=False)
 
@@ -2648,7 +2644,7 @@ def redefine_source_rest_pose(src_arm, tar_arm):
 
 
 def _import_anim(anim_name, src_arm, tar_arm, import_only=False):
-    print("\nImporting animation...")
+    print("\nImporting animation...", anim_name)
     scn = bpy.context.scene
     
     bpy.ops.object.mode_set(mode='OBJECT')

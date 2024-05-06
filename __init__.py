@@ -12,15 +12,15 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 bl_info = {
-    "name" : "Simple ControlRig & Mixamo Mapping",
-    "author" : "obhi-d",
-    "description" : "",
-    "blender" : (2, 80, 0),
-    "version" : (0, 0, 1),
-    "location" : "3D View > Simple ControlRig",
-    "location" : "",
-    "warning" : "",
-    "category" : "Rigging"
+    "name": "Mixamo Rig for Blender 4.0",
+    "author": "Mixamo - Xin",
+    "version": (1, 0, 0),
+    "blender": (4, 0, 0),
+    "location": "3D View > Mixamo> Control Rig",
+    "description": "Generate a control rig from the selected Mixamo Fbx skeleton",
+    "category": "Animation",
+    "doc_url": "https://github.com/obhi-d/mixamo_ctrl_rig_ex.git",
+    "tracker_url": "https://github.com/obhi-d/mixamo_ctrl_rig_ex.git"
 }
 
 from . import auto_load

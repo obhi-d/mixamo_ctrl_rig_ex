@@ -35,7 +35,7 @@ class MR_OT_arm_bake_fk_to_ik(bpy.types.Operator):
 
     def invoke(self, context, event):
         action = context.active_object.animation_data.action
-        self.frame_start, self.frame_end = action.frame_range[0], action.frame_range[1]
+        self.frame_start, self.frame_end = int(action.frame_range[0]), int(action.frame_range[1])
         wm = context.window_manager
         return wm.invoke_props_dialog(self, width=400)
 

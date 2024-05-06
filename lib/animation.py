@@ -198,14 +198,6 @@ def bake_anim(anim_name, frame_start=0, frame_end=10, only_selected=False, bake_
 
             armature.keyframe_insert("scale", index=-1, frame=f, group=name)
 
+
     # restore current frame
     scn.frame_set(current_frame)
-    
-    tracks = armature.animation_data.nla_tracks
-    new_track = tracks.new(prev=None)
-    new_track.name = anim_name
-    strip = new_track.strips.new(action.name, frame_start, action)
-    new_track.lock = True
-    new_track.mute = True
-    
-    

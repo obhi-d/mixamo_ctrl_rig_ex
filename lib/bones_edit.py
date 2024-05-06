@@ -4,6 +4,12 @@ def get_edit_bone(name):
     return bpy.context.object.data.edit_bones.get(name)
 
 
+def copy_pose_bone_transform(bone1, bone2):
+    # copy editbone bone1 transforms to bone 2
+    bone2.location = bone1.location.copy()
+    bone2.rotation_quaternion = bone1.rotation_quaternion.copy()
+    bone2.scale = bone1.scale.copy()
+
 def copy_bone_transforms(bone1, bone2):
     # copy editbone bone1 transforms to bone 2
     bone2.head = bone1.head.copy()
