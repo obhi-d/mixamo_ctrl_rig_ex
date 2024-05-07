@@ -80,6 +80,7 @@ def bake_anim(anim_name, frame_start=0, frame_end=10, only_selected=False, bake_
 
     # set new action
     action = bpy.data.actions.new(anim_name)
+    action.use_fake_user = True
     anim_data = armature.animation_data_create()
     anim_data.action = action
 
