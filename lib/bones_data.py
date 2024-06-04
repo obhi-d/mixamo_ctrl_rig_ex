@@ -22,12 +22,12 @@ def set_bone_collection(armt, databone, coll_name, multi=False):
     colls_to_remove_from = None
     if not multi:
         colls_to_remove_from = [c for c in databone.collections]
+    
+    for c in databone.collections:
+        if c != coll:
+            c.unassign(databone)
 
     r = coll.assign(databone)
-
-    if colls_to_remove_from is not None:
-        for c in colls_to_remove_from:
-            c.unassign(databone)
 
     # ~ databone.layers[layer_idx] = True
 
