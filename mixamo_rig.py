@@ -29,8 +29,27 @@ class MR_Properties(bpy.types.PropertyGroup):
 # OPERATOR CLASSES
 ##################
 
-class MR_OT_rename_to_mixamo(bpy.types.Operator):
+class MR_OT_rename_to_blender_friendly(bpy.types.Operator):
     """Update control rig naming to Blender 4.0"""
+
+    bl_idname = "mr.rename_to_blender_friendly"
+    bl_label = "rename_to_blender_friendly"
+    bl_options = {'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object and context.active_object.type == "ARMATURE"
+
+    def execute(self, context):
+        try:
+            rename_to_blender_friendly(context.active_object.data)
+        finally:
+            pass
+
+        return {'FINISHED'}
+    
+class MR_OT_rename_to_mixamo(bpy.types.Operator):
+    """Update control rig naming to Mixamo"""
 
     bl_idname = "mr.rename_to_mixamo"
     bl_label = "rename_to_mixamo"
@@ -785,6 +804,20 @@ def _fix_armature_name(armature):
             rename_to_mixamo(armature)
             return
     
+def rename_to_blender_friendly(armature):
+    
+    bpy.ops.object.mode_set(mode='EDIT')
+    print('Renaming armature to mixamo')
+        
+    for b in armature.edit_bones[:]:
+        name = b.name
+        if name.startswith('mixamorig:'):
+            name = name[len('mixamorig:'):]
+        if name.startswith('Left'):
+            name = name[len('Left'):] + '_l'
+        elif name.startswith('Right'):
+            name = name[len('Right'):] + '_r'
+            
 def rename_to_mixamo(armature):
     
     bpy.ops.object.mode_set(mode='EDIT')
@@ -3251,6 +3284,7 @@ class MR_PT_MenuUpdate(Panel, MixamoRigPanel):
         layt.operator(MR_OT_snap_fk_to_ik.bl_idname, text="Snap FK to IK")
         layt.operator(MR_OT_snap_ik_to_fk.bl_idname, text="Snap IK to FK")
         layt.operator(MR_OT_rename_to_mixamo.bl_idname, text="Rename to Mixamo")
+        layt.operator(MR_OT_rename_to_blender_friendly.bl_idname, text="Rename to Blender Friendly")
         layt.prop(scn.mix_rig_props, "global_fk_ik_blend")
 
 
